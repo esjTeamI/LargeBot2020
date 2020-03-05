@@ -1,0 +1,199 @@
+#include <kipr/wombat.h>
+void drive(int speed, int inches);
+void freezemotors();
+void turn(int speed, int deg);
+void gotilltape(int speed);
+void pause(int msec);
+void linefollow();
+void driveb(int speed, int msec  );
+void slowservo(int port, int position);
+void find();
+void find2();
+void pivotmotors(int speedr, int speedl, int deg);
+void linefollow2(int inches);
+void startservo();
+void servomove(int port, int position);
+int inchestoticks = 270;
+int degtoticks=1;
+int i;
+int ltophat;
+int lmotor=0;
+int rmotor= 1;
+int offset=0;
+int black=3000;
+int main()
+{
+    shut_down_in(119);
+    startservo();
+    turn(300,50);
+    drive(-300,3);
+    gotilltape(100);
+    drive(-300,4.2);
+    turn(-300,90);
+    gotilltape(100);
+    drive(300,4);
+    turn(300,90);
+    drive(-300,2);
+    turn(-300,20);
+    linefollow();
+    drive(-300, 3);
+    find();
+    find();
+    return 0;
+}
+
+void drive(int speed, int inches)
+{
+    create_connect();
+    create_drive_direct(speed, speed- offset);
+    msleep(inches*85);
+    create_disconnect();
+    freezemotors();
+}
+void freezemotors()
+{
+    create_connect();
+    create_drive_direct(0,0);
+    msleep(1000);
+    create_disconnect();
+}
+void turn(int speed, int deg)
+{
+    create_connect();
+    create_drive_direct(speed, -speed);
+    msleep(deg*6.55);
+    create_disconnect();
+    freezemotors();
+}
+void gotilltape(speed)
+{
+    create_connect();
+    while(get_create_lcliff_amt() > 2000)
+    {
+        create_drive_direct(speed, speed);
+    }
+    while(get_create_rcliff_amt() > 2000)
+    {
+        create_drive_direct(0, speed-50);
+    }
+    create_disconnect();
+}
+void pause(int msec)
+{
+    mav(0,0);
+    mav(1,0);
+    msleep(msec);
+}
+void linefollow()
+{
+    create_connect();
+    while(analog(1) < 2800)
+    {
+        if(analog(1) < 2800)
+        {
+            create_drive_direct(100, -100);
+
+        }
+
+    }
+    create_disconnect();
+}
+void driveb(int speed, int msec  )
+{
+    mav(lmotor, -speed);
+    mav(rmotor,-speed +offset);
+    msleep(msec);
+    freezemotors();
+}
+void pivotmotors(int speedr, int speedl, int deg)
+{
+    mav(0,-speedr);
+    mav(1,speedl);
+    msleep(deg* 17.4);
+    freezemotors();
+}
+void linefollow2(int inches)
+{
+    cmpc(lmotor);
+    while((gmpc(lmotor)) < inches * inchestoticks)
+    {
+        if(analog(0) < 2500)
+        {
+            mav(lmotor, -500);
+            mav(rmotor,  500);
+        }
+        else if(analog(0) > 2500)
+        {
+            mav(lmotor,1000);
+            mav(rmotor,1000 );
+        }
+    }
+}
+void startservo()
+{
+    enable_servos();
+    servomove(0,2043);
+    servomove(1,0);
+    disable_servos();
+}
+void servomove(int port, int position)
+{
+    enable_servos();
+    set_servo_position(port,position);
+    msleep(1000);
+    disable_servos();
+}
+void find()
+{
+    while(analog(0) < 2500)
+    {
+        if(analog(0) < 2500)
+        {
+            mav(0, -500);
+
+        }
+
+    }
+    mav(0,-1000);
+    msleep(800);
+    mav(0,-0);
+    msleep(800);
+}
+void find2()
+{
+    while(analog(0) < 2500)
+    {
+        if(analog(0) < 2500)
+        {
+            mav(0, -500);
+
+        }
+
+    }
+    mav(0,-1000);
+    msleep(1600);
+    mav(0,-0);
+    msleep(800);
+}
+void slowservo(int port, int position)
+{
+    enable_servos();
+    pause(100);
+    if(get_servo_position(port) < position)
+    {
+        for(i = get_servo_position(port); i < position; i = i + 8)
+        {
+            set_servo_position(port, i);
+            msleep(10);
+        }
+    }
+    else if(get_servo_position(port) > position)
+    {
+        for(i = get_servo_position(port); i > position; i = i - 8)
+        {
+            set_servo_position(port, i);
+            msleep(10);
+        }
+    }
+    disable_servos();
+}
